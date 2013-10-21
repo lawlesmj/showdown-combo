@@ -22,6 +22,8 @@ typedef struct {
     unsigned int sender; //defined by the person who instantiates the client
     unsigned int serialNum; //message number
     int retAddr; // return address for the reply
+    //some form of array the request vector or soemthing... yeah!
+    //butts?
   } request;
 } msgbuf;
 
