@@ -14,7 +14,7 @@
 #ifndef BANKER_H
 #define BANKER_H
 
-#define BANK_MSGQUE_KEY 0xF7EA
+#define BANK_MSGQUE_KEY 0xF0540DA4
 
 typedef struct {
   long mtype; //Message purpose code 
