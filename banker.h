@@ -29,4 +29,13 @@ typedef struct {
 
 #define NOTE_SIZE sizeof(msgbuf) - sizeof(long)
 
+typedef struct {
+	unsigned int width;
+	int * data;
+} matrix_t;
+
+#define MATRIX(matrix, x, y) matrix.data[x + y*matrix.width]
+#define PMATRIX(matrix, x, y) matrix->data[x + y*matrix->width]
+
+
 #endif
