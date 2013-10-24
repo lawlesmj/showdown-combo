@@ -18,14 +18,14 @@
 
 typedef struct {
   long mtype; //Message purpose code 
-  struct {
+  typedef struct {
     unsigned int sender; //defined by the person who instantiates the client
     unsigned int serialNum; //message number
     int retAddr; // return address for the reply
-    //some form of array the request vector or soemthing... yeah!
     //butts?
+    int resourceVector[1];
   } request;
-} msgbuf;
+} msgbuf_t;
 
 #define NOTE_SIZE sizeof(msgbuf) - sizeof(long)
 
