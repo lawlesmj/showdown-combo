@@ -22,6 +22,8 @@
 
 #include "banker.h"
 
+constant unsigned int MAX_CLIENTS = 10;
+
 void init_resources(unsigned int * numTypes, unsigned int ** available) {
 	unsigned int i;
 	FILE * file;
