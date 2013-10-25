@@ -20,13 +20,23 @@
 #include <sys/types.h>
 #include <sys/msg.h>
 
+#include <tuple> //could be useful
+//example instantiation: tuple <double, char> t2(3.55, 'a');
+//example access: val1=get<0> (t2);//3.55
+//we would need to keep it well order thats the biggest issue I see here.
+
 #include "banker.h"
 
-constant unsigned int MAX_CLIENTS = 10;
+
+const unsigned int MAX_CLIENTS = 10;
 
 void init_resources(unsigned int * numTypes, unsigned int ** available) {
 	unsigned int i;
 	FILE * file;
+	//need to define an array that holds both the id of the client as well as their resources
+	//this could either be done by assuming that the number the client says will be their id
+	//or we could have a tuple with the first coord as the id and the second part as the resource matrix.
+	// I'm not sure what would work better. Can you even do Tuples in C? Yes you can.
 	
 	file = fopen("initial.data", "r");
 	if(file == NULL) {
