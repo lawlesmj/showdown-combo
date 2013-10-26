@@ -9,7 +9,7 @@
 
 #include "banker.h"
 
-
+void randomInit(unsigned int claim[], unsigned int allocated[], unsigned int size);
 
 int main(int argc, char *argv[]){
 	msgbuf_t * request;
@@ -22,9 +22,12 @@ int main(int argc, char *argv[]){
     unsigned int * claim;
     
     init_resources(&numTypes, &claim);
-    randomInit(&claim, numTypes);
+    allocated = (unsigned int *) calloc(numTypes,sizeof(unsigned int));
+    randomInit(&claim, &allocated, numTypes);
+   
     
     request = (msgbuf_t *) malloc(sizeof(msgbuf_t) + sizeof(int) * (numTypes - 1));
+    
     if(request == NULL) {
     	printf("Error allocating message buffer of size %d.", numTypes);
 	    exit(1);
@@ -37,11 +40,15 @@ int main(int argc, char *argv[]){
     	exit(1);
     }
     
+    //
+    randomInit(request->request.data[])
+    
 }
 
-void randomInit(int * claim, int size){
+void randomInit(unsigned int claim[], unsigned int allocated[], unsigned int size){
 	int i = 0;
 	for(i = 0; i < size; i++){
-		claim[i] = (int) claim * rand();
+		claim[i] = ((unsigned int) (claim[i] - allocated[i] )* rand();
 	}
 }
+
