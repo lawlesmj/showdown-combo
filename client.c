@@ -7,6 +7,8 @@
 #include <sys/types.h>
 #include <sys/msg.h>
 
+#include "banker.h"
+
 int main(int argc, char *argv[]){
 
 }
