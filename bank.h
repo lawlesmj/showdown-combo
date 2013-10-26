@@ -11,8 +11,8 @@
 *
 * **************************************************************************/
 
-#ifndef BANKER_H
-#define BANKER_H
+#ifndef BANK_H
+#define BANK_H
 
 #define BANK_MSGQUE_KEY 0xF0540DA4
 
@@ -27,16 +27,9 @@ typedef struct {
   } request;
 } msgbuf_t;
 
-#define NOTE_SIZE sizeof(msgbuf) - sizeof(long)
+#define REQUEST_SIZE sizeof(msgbuf) - sizeof(long)
 
-typedef struct {
-	unsigned int width;
-	unsigned int height;
-	int * data;
-} matrix_t;
-
-#define MATRIX(matrix, x, y) matrix.data[x + y*matrix.width]
-#define PMATRIX(matrix, x, y) matrix->data[x + y*matrix->width]
+void init_resources(unsigned int * numTypes, unsigned int ** available);
 
 
 #endif
