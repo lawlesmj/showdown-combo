@@ -1,5 +1,7 @@
-#include "bank.h"
+#include <stdio.h>
+#include <stdlib.h>
 
+#include "bank.h"
 
 void init_resources(unsigned int * numTypes, unsigned int ** available) {
 	unsigned int i;
