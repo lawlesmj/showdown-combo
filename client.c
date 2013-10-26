@@ -29,6 +29,14 @@ int main(int argc, char *argv[]){
     	printf("Error allocating message buffer of size %d.", numTypes);
 	    exit(1);
     }
+    
+    key = ftok("initial.data" , id);
+    
+    if(msgqid = msgget(key,0644| IPC_CREAT | IPC_EXCL) == -1){
+    	printf("Cannot create an exclusive message queue exiting"):
+    	exit(1);
+    }
+    
 }
 
 void randomInit(int * claim, int size){
