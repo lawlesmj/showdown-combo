@@ -9,21 +9,25 @@
 
 #include "banker.h"
 
-void randomInit(unsigned int claim[], unsigned int allocated[], unsigned int size);
+void randomInit(unsigned int request[]);
+
+//globals
+unsigned int * allocated;
+unsigned int * claim;
+unsigned int numTypes;
 
 int main(int argc, char *argv[]){
-	msgbuf_t * request;
-    int msgqid;
-    unsigned int numTypes;
-    key_t key;
+	msgbuf_t * msgbuf;
+	int msgqid;
+	
+	key_t key;
     //manage message info
-    int id;
-    unsigned int * allocated;
-    unsigned int * claim;
+	int id;
     
-    init_resources(&numTypes, &claim);
-    allocated = (unsigned int *) calloc(numTypes,sizeof(unsigned int));
-    randomInit(&claim, &allocated, numTypes);
+    
+	init_resources(&numTypes, &claim);
+	allocated = (unsigned int *) calloc(numTypes,sizeof(unsigned int));
+	randomInit(&claim, &allocated, numTypes);
    
     
     request = (msgbuf_t *) malloc(sizeof(msgbuf_t) + sizeof(int) * (numTypes - 1));
@@ -41,14 +45,14 @@ int main(int argc, char *argv[]){
     }
     
     //
-    randomInit(request->request.data[])
+    randomInit(msgbuf->request.data[])
     
 }
 
-void randomInit(unsigned int claim[], unsigned int allocated[], unsigned int size){
-	int i = 0;
-	for(i = 0; i < size; i++){
-		claim[i] = ((unsigned int) (claim[i] - allocated[i] )* rand();
+void randomInit(unsigned int request[]){
+	int i;
+	for(i = 0; i < numTypes; i++){
+		request[i] = ((unsigned int) (claim[i] - allocated[i] )* rand();
 	}
 }
 
