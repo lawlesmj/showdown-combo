@@ -18,6 +18,7 @@ void wait();
 unsigned int * allocated;
 unsigned int * claim;
 unsigned int numTypes;
+const int MAX_ATTEMPTS = 10;
 
 int main(int argc, char *argv[]){
 	msgbuf_t * msgbuf;
@@ -28,6 +29,7 @@ int main(int argc, char *argv[]){
 	int id;
 	
 	boolean safetyConcern = false;
+	unsigned int attempts = 0;
     
     
 	init_resources(&numTypes, &claim);
@@ -57,20 +59,25 @@ int main(int argc, char *argv[]){
 	//step3
 	do{
 		//send request
-		switch{
+		switch(/*purpose code */){
 			case 4:
+				//request granted
 				safetyConcern == false;
 				break;
 			case 5:
+				//deny request due to safety
 				safetyConcern == true;
 				break;
 			case 6:
+				// request denied exceeds max claims
 				safetyConcern == false;
 				break;
 			case 7:
+				//resorces released successfully
 				safetyConcern == false;
 				brak;
 			case 8:
+				//release more than allocated
 				safetyConcern == false;
 				break;
 			case 9:
@@ -89,7 +96,11 @@ int main(int argc, char *argv[]){
 				//invalid purpose code
 				break;
 		}
-	}while(safetyConcern == true);
+	}while(safetyConcern == true && attemtps < MAX_ATTEMPTS);
+	
+	//reseting do-while loop
+	safetyConcern = false;
+	attempts = 0;
 	
     
 }
