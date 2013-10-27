@@ -7,6 +7,8 @@
 #include <sys/types.h>
 #include <sys/msg.h>
 
+#include <unistd.h> //lets us use u sleep
+
 #include "banker.h"
 
 void randomInit(unsigned int request[]);
