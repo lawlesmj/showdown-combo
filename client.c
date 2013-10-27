@@ -59,8 +59,14 @@ int main(int argc, char *argv[]){
 		exit(1);
 	}
     
+    	msgbuf->request.serialNum = 1;
 	do{
 		//setup message
+		msgbuf.mtype = 1;
+		msgbuf->request.sender = id;
+		msgbuf->request.serialNum = msgbuf->request.serialNum += 1;
+		msgbuf->request.retAddr = myqid;
+		memcpy( msgbuf->resourceVector, claim, sizeof(unsigned int) * numTypes);
 		//send intial request
 		if (msgsnd(bankqid, msgbuf, REQUEST_SIZE) == -1){
 			printf("Error sending message");
