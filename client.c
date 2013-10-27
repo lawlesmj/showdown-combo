@@ -53,6 +53,9 @@ int main(int argc, char *argv[]){
 		exit(1);
 	}
     
+    	//send intial request
+    
+    
 	//step1 make a randomized resource request
 	randomInit(msgbuf->request.data);
 	
@@ -95,6 +98,15 @@ int main(int argc, char *argv[]){
 		//wait for response
 		//step 7 
 		
+		if( purpose code == 8){
+			//print some stuff
+			//alter allocated vector accordingly
+		}
+		else{
+			//print some stuff
+			//do not alter allocated vector
+		}
+		
 	
 	}
 	
@@ -125,5 +137,5 @@ void randomRelease(unsigned int request[]){
 void wait(){
 	unsigned int time = 1000 + 9000 * rand();
 	usleep(time);
-;}
+}
 
