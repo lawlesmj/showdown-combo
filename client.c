@@ -23,7 +23,9 @@ const int MAX_ATTEMPTS = 10;
 
 int main(int argc, char *argv[]){
 	msgbuf_t * msgbuf;
-	int msgqid;
+	msgbuf_t * respbuf;
+	int myqid;
+	int bankqid
 	
 	key_t key;
 	//manage message info
@@ -39,7 +41,7 @@ int main(int argc, char *argv[]){
 	randomInit(&claim, &allocated, numTypes);
    
     
-    request = (msgbuf_t *) malloc(sizeof(msgbuf_t) + sizeof(int) * (numTypes - 1));
+	request = (msgbuf_t *) malloc(sizeof(msgbuf_t) + sizeof(int) * (numTypes - 1));
     
 	if(request == NULL) {
 		printf("Error allocating message buffer of size %d.", numTypes);
@@ -48,18 +50,31 @@ int main(int argc, char *argv[]){
     
 	key = ftok("initial.data" , id);
     
-	if(msgqid = msgget(key,0644| IPC_CREAT | IPC_EXCL) == -1){
+    	if((bankqid = msgget(key, 0644)) == -1) {
+		perror("msgget");
+		exit(1);
+  	}
+	if(myqid = msgget(key,0644| IPC_CREAT | IPC_EXCL) == -1){
 		printf("Cannot create an exclusive message queue exiting"):
 		exit(1);
 	}
     
-    do{
+	do{
+		//setup message
 		//send intial request
+		if (msgsnd(bankqid, msgbuf, REQUEST_SIZE) == -1){
+			printf("Error sending message");
+			exit(1);
+		}
+		if (msgrc(myqid, respbuf, NOTE_SIZE, 0, 0) == -1){
+			printf("Error recieving message");
+			exit(1);
+		}
 		for(i = 0; i < numTypes; i++){
 			if(claim[i] > 0)
 				claim[i] = claim[i] - 1;
 		}
-    }while(msgbuf.mtype == 10);
+	}while(respbuf.mtype == 10);
 	
     
     
