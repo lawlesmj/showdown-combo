@@ -12,6 +12,7 @@
 #include "banker.h"
 
 void randomInit(unsigned int request[]);
+void randomRelease(unsigned int request[]);
 void wait();
 
 //globals
@@ -84,7 +85,24 @@ int main(int argc, char *argv[]){
 		}
 	}while(attempts < MAX_ATTEMPTS);
 	
+	
+	if(attempts < MAX_ATTEMPTS){
+		//step 4
+		wait();
+		//step 5
+		randomRelease(/* put the stuff here */);
+		//step 6
+		//wait for response
+		//step 7 
+		
+	
+	}
+	
+	//step 8 
+	wait();
+	
 	//reseting do-while loop
+	//happens at the end of the loop
 	attempts = 0;
 	
     
@@ -94,6 +112,13 @@ void randomInit(unsigned int request[]){
 	int i;
 	for(i = 0; i < numTypes; i++){
 		request[i] = (unsigned int) (claim[i] - allocated[i] )* rand();
+	}
+}
+
+void randomRelease(unsigned int request[]){
+	int i;
+	for(i = 0; i < numTypes; i++){
+		request[i] = (unsigned int) (allocated[i] )* rand();
 	}
 }
 
