@@ -33,15 +33,14 @@ typedef struct {
 typedef struct {
 	unsigned int size;
 	unsigned int items;
-	client_info_t * clientsInfo;
+	client_info_t * clientInfo;
 } sorted_array_t;
 
-int compare_client_ids(const void* pid, const void* pelem);
+int compare_client_ids(const void* id, const void* pelem);
 
 void add_client(sorted_array_t *, client_info_t);
 client_info_t* get_client(sorted_array_t *, int id);
 void remove_client(sorted_array_t *, int id);
-//void clear_clients(client_info_t[]);
 
 
 int main() {
@@ -53,7 +52,7 @@ int main() {
 	unsigned int * available;
 	sorted_array_t clients;
 	
-	usigned int numClients = 0;
+	char decreasingFlag = 0;
 	
 	init_resources(&numTypes, &available);
 	
@@ -61,7 +60,23 @@ int main() {
 	
 	clients.size = 4;
 	clients.items = 0;
-	clients.clientsInfo = (clients_info_t *) malloc(clients.size * sizeof(client_info_t))
+	clients.clientInfo = (clients_info_t *) malloc(clients.size * sizeof(client_info_t))
+	
+	//Make exclusive mailbox
+	
+	while(decreasingFlag && clients->items > 0) {
+		//Wait for requests
+		
+		//process requests
+		
+		//Display status
+		
+		//Send reply
+	}
+	
+	//Clean up
+	free(available);
+	free(clients->clientInfo);
 	
 	return 0;
 }
@@ -111,8 +126,9 @@ void remove_client(sorted_array_t * clients, int id) {
 			removedClient = clients->clientInfo[mid];
 			break;
 	}
-	
+	//if found
 	if(removedClient != NULL) {
+		//shift items to the left to fill the gap
 		clients->items--;
 		for(; mid < clients->items; mid++) {
 			clients->clientInfo[mid] = clients->clientInfo[mid + 1];
@@ -127,6 +143,6 @@ void remove_client(sorted_array_t * clients, int id) {
 	}
 }
 
-int compare_client_ids(const void* pid, const void* pelem) {
-	return *(int *)pid - ((client_info_t *)pelem)->id;
+int compare_client_ids(const void* id, const void* pelem) {
+	return *(int *)id - ((client_info_t *)pelem)->id;
 }
