@@ -25,10 +25,11 @@ int main(int argc, char *argv[]){
 	int msgqid;
 	
 	key_t key;
-    //manage message info
+	//manage message info
 	int id;
 	
-	boolean safetyConcern = false;
+	//manage loops
+	unsigned int i;
 	unsigned int attempts = 0;
     
     
@@ -42,17 +43,17 @@ int main(int argc, char *argv[]){
 	if(request == NULL) {
 		printf("Error allocating message buffer of size %d.", numTypes);
 		exit(1);
-    }
+    	}
     
 	key = ftok("initial.data" , id);
     
 	if(msgqid = msgget(key,0644| IPC_CREAT | IPC_EXCL) == -1){
 		printf("Cannot create an exclusive message queue exiting"):
 		exit(1);
-    }
+	}
     
-    //step1 make a randomized resource request
-	randomInit(msgbuf->request.data[])
+	//step1 make a randomized resource request
+	randomInit(msgbuf->request.data);
 	
 	//step2 wait for a response from the banker of a matching serial number
 	
@@ -62,44 +63,28 @@ int main(int argc, char *argv[]){
 		switch(/*purpose code */){
 			case 4:
 				//request granted
-				safetyConcern == false;
-				break;
-			case 5:
-				//deny request due to safety
-				safetyConcern == true;
+				attempts = MAX_ATTEMPTS;
 				break;
 			case 6:
 				// request denied exceeds max claims
-				safetyConcern == false;
+				for(i = 0; i < numTypes; i++){
+					msgbuf->request.data[i] = msgbuf->request.data[i] - 1;
+				}
+				attempts++;
 				break;
-			case 7:
-				//resorces released successfully
-				safetyConcern == false;
-				brak;
-			case 8:
-				//release more than allocated
-				safetyConcern == false;
-				break;
-			case 9:
-				//intial registration + acception
-				safetyConcern == false;
-				break;
-			case 10:
-				//intitial reg + failure
-				safetyConcern == false;
-				break;
+			case 5:
+				//deny request due to safety
 			case 12:
-				//request denied no resources available
-				safetyConcern == false;
+				//request denied no resources available, but may be later
+				wait();
 				break;
 			default:
 				//invalid purpose code
 				break;
 		}
-	}while(safetyConcern == true && attemtps < MAX_ATTEMPTS);
+	}while(attempts < MAX_ATTEMPTS);
 	
 	//reseting do-while loop
-	safetyConcern = false;
 	attempts = 0;
 	
     
