@@ -53,7 +53,14 @@ int main(int argc, char *argv[]){
 		exit(1);
 	}
     
-    	//send intial request
+    do{
+		//send intial request
+		for(i = 0; i < numTypes; i++){
+			if(claim[i] > 0)
+				claim[i] = claim[i] - 1;
+		}
+    }while(msgbuf.mtype == 10);
+	
     
     
 	//step1 make a randomized resource request
