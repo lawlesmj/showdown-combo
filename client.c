@@ -56,14 +56,38 @@ int main(int argc, char *argv[]){
 	
 	//step3
 	do{
-		if(/*request granted*/){
-			
-		}
-		else if(/*request denied*/){
-			
-		}
-		else if(/*denied due to safety concerns*/){
-			
+		//send request
+		switch{
+			case 4:
+				safetyConcern == false;
+				break;
+			case 5:
+				safetyConcern == true;
+				break;
+			case 6:
+				safetyConcern == false;
+				break;
+			case 7:
+				safetyConcern == false;
+				brak;
+			case 8:
+				safetyConcern == false;
+				break;
+			case 9:
+				//intial registration + acception
+				safetyConcern == false;
+				break;
+			case 10:
+				//intitial reg + failure
+				safetyConcern == false;
+				break;
+			case 12:
+				//request denied no resources available
+				safetyConcern == false;
+				break;
+			default:
+				//invalid purpose code
+				break;
 		}
 	}while(safetyConcern == true);
 	
