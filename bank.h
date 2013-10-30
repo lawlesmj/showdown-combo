@@ -27,7 +27,9 @@ typedef struct {
   } request;
 } msgbuf_t;
 
-#define REQUEST_SIZE sizeof(msgbuf) - sizeof(long)
+// Macro uses the numTypes varible to calculate the size of the message
+#define REQUEST_SIZE (sizeof(msgbuf) - sizeof(long) + sizeof(int) * (numTypes - 1))
+#define MSGBUF_SIZE (sizeof(msgbuf) + sizeof(int) * (numTypes - 1))
 
 void init_resources(unsigned int * numTypes, unsigned int ** available);
 
