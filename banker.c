@@ -96,7 +96,7 @@ int main() {
 			exit(1);
 		};
 		//display request
-		printf("Received following msg at queueID %u:", msgqid);
+		display_msg(msgbuf, msgqid, numTypes);
 		
 		//process requests
 		switch(msgbuf->mtype) {
@@ -117,9 +117,13 @@ int main() {
 				//bad or unprocessed type, so ignore it
 		}
 		
-		//Display status
+		//display reply
+		display_msg(msgbuf, msgqid, numTypes);
 		
 		//Send reply
+		
+		//Display status
+		
 	} while(decreasingFlag && clients->items > 0);
 	
 	cleanup(-1, available, clients, msgbuf, msgqid);
