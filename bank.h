@@ -32,6 +32,7 @@ typedef struct {
 #define MSGBUF_SIZE (sizeof(msgbuf) + sizeof(int) * (numTypes - 1))
 
 void init_resources(unsigned int * numTypes, unsigned int ** available);
+void display_msg(msgbuf_t * msgbuf, int msgqid);
 
 
 #endif
