@@ -20,19 +20,20 @@ unsigned int * allocated;
 unsigned int * claim;
 unsigned int numTypes;
 const int MAX_ATTEMPTS = 10;
+const int MAX_ITERATIONS = 10;
 
 int main(int argc, char *argv[]){
 	msgbuf_t * msgbuf;
 	msgbuf_t * respbuf;
 	int myqid;
-	int bankqid
+	int bankqid;
 	
 	key_t key;
 	//manage message info
 	int id;
 	
 	//manage loops
-	unsigned int i;
+	unsigned int i,j;
 	unsigned int attempts = 0;
     
     
@@ -50,7 +51,7 @@ int main(int argc, char *argv[]){
     
 	key = ftok("initial.data" , id);
     
-    	if((bankqid = msgget(key, 0644)) == -1) {
+    if((bankqid = msgget(key, 0644)) == -1) {
 		perror("msgget");
 		exit(1);
   	}
@@ -59,14 +60,15 @@ int main(int argc, char *argv[]){
 		exit(1);
 	}
     
-    	msgbuf->request.serialNum = 1;
+	msgbuf.mtype = 1;
+	msgbuf->request.sender = id;
+	msgbuf->request.serialNum = 1;
+	msgbuf->request.retAddr = myqid;
 	do{
 		//setup message
-		msgbuf.mtype = 1;
-		msgbuf->request.sender = id;
 		msgbuf->request.serialNum = msgbuf->request.serialNum += 1;
-		msgbuf->request.retAddr = myqid;
 		memcpy( msgbuf->resourceVector, claim, sizeof(unsigned int) * numTypes);
+		
 		//send intial request
 		if (msgsnd(bankqid, msgbuf, REQUEST_SIZE) == -1){
 			printf("Error sending message");
@@ -83,68 +85,68 @@ int main(int argc, char *argv[]){
 	}while(respbuf.mtype == 10);
 	
     
-    
-	//step1 make a randomized resource request
-	randomInit(msgbuf->request.data);
+	for(j = 0; j < MAX_ITERATIONS; j++){
+		//step1 make a randomized resource request
+		randomInit(msgbuf->request.resourceVector);
 	
-	//step2 wait for a response from the banker of a matching serial number
+		//step2 wait for a response from the banker of a matching serial number
 	
-	//step3
-	do{
-		//send request
-		switch(/*purpose code */){
-			case 4:
-				//request granted
-				attempts = MAX_ATTEMPTS;
-				break;
-			case 6:
-				// request denied exceeds max claims
-				for(i = 0; i < numTypes; i++){
-					msgbuf->request.data[i] = msgbuf->request.data[i] - 1;
-				}
-				attempts++;
-				break;
-			case 5:
-				//deny request due to safety
-			case 12:
-				//request denied no resources available, but may be later
-				wait();
-				break;
-			default:
-				//invalid purpose code
-				break;
+		//step3
+		do{
+			//send request
+			switch(/*purpose code */){
+				case 4:
+					//request granted
+					attempts = MAX_ATTEMPTS;
+					break;
+				case 6:
+					// request denied exceeds max claims
+					for(i = 0; i < numTypes; i++){
+						msgbuf->request.data[i] = msgbuf->request.data[i] - 1;
+					}
+					attempts++;
+					break;
+				case 5:
+					//deny request due to safety
+				case 12:
+					//request denied no resources available, but may be later
+					wait();
+					break;
+				default:
+					//invalid purpose code
+					break;
+			}
+		}while(attempts < MAX_ATTEMPTS);
+	
+	
+		if(attempts < MAX_ATTEMPTS){
+			//step 4
+			wait();
+			//step 5
+			randomRelease(/* put the stuff here */);
+			//step 6
+			//wait for response
+			//step 7 
+		
+			if( purpose code == 8){
+				//print some stuff
+				//alter allocated vector accordingly
+			}
+			else{
+				//print some stuff
+				//do not alter allocated vector
+			}
+		
+	
 		}
-	}while(attempts < MAX_ATTEMPTS);
 	
-	
-	if(attempts < MAX_ATTEMPTS){
-		//step 4
+		//step 8 
 		wait();
-		//step 5
-		randomRelease(/* put the stuff here */);
-		//step 6
-		//wait for response
-		//step 7 
-		
-		if( purpose code == 8){
-			//print some stuff
-			//alter allocated vector accordingly
-		}
-		else{
-			//print some stuff
-			//do not alter allocated vector
-		}
-		
 	
+		//reseting do-while loop
+		//happens at the end of the loop
+		attempts = 0;
 	}
-	
-	//step 8 
-	wait();
-	
-	//reseting do-while loop
-	//happens at the end of the loop
-	attempts = 0;
-	
     
 }
 
