@@ -48,6 +48,7 @@ void cleanup(int step, unsigned int * available, sorted_array_t clients, msgbuf_
 int main() {
 	msgbuf_t * msgbuf;
 	int msgqid;
+	int clientqid;
 	unsigned int numTypes;
 	key_t key;
 	int messageNum;
@@ -95,8 +96,11 @@ int main() {
 			cleanup(3, available, clients, msgbuf, msgqid);
 			exit(1);
 		};
+		clientqid = msgbuf->request.sender;
+		
 		//display request
-		display_msg(msgbuf, msgqid, numTypes);
+		printf("Received message at queueID %u:\n", msgqid);
+		display_msg(msgbuf, numTypes);
 		
 		//process requests
 		switch(msgbuf->mtype) {
@@ -118,7 +122,8 @@ int main() {
 		}
 		
 		//display reply
-		display_msg(msgbuf, msgqid, numTypes);
+		printf("Sent message to queueID %u:\n", clientqid);
+		display_msg(msgbuf, numTypes);
 		
 		//Send reply
 		
