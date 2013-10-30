@@ -42,42 +42,87 @@ void add_client(sorted_array_t *, client_info_t);
 client_info_t* get_client(sorted_array_t *, int id);
 void remove_client(sorted_array_t *, int id);
 
+void cleanup(int step, unsigned int * available, sorted_array_t clients, msgbuf_t * msgbuf,  int msgqid);
+
 
 int main() {
 	msgbuf_t * msgbuf;
 	int msgqid;
 	unsigned int numTypes;
 	key_t key;
+	int messageNum;
 	
 	unsigned int * available;
 	sorted_array_t clients;
 	
-	char decreasingFlag = 0;
+	char decreasingFlag;
 	
 	init_resources(&numTypes, &available);
-	
-	key = BANK_MSGQUE_KEY;
 	
 	clients.size = 4;
 	clients.items = 0;
 	clients.clientInfo = (clients_info_t *) malloc(clients.size * sizeof(client_info_t))
+	if(clients.clientInfo == NULL) {
+		perror("malloc clients.clientInfo");
+		cleanup(0, available, clients, msgbuf, msgqid);
+		exit(1);
+	}
+	
+	msgbuf = (msgbuf_t *) malloc(MSGBUF_SIZE);
+	if(msgbuf == NULL) {
+		perror("malloc msgbuf");
+		cleanup(1, available, clients, msgbuf, msgqid);
+		exit(1);
+	}
 	
 	//Make exclusive mailbox
+	key = BANK_MSGQUE_KEY;
+	msgqid = msgget(key, 0420 | IPC_EXCL | IPC_CREAT);
+	if(msgqui == NULL) {
+		// Failed to create queue
+		perror("msgget");
+		cleanup(2, available, clients, msgbuf, msgqid);
+		exit(1);
+	}
 	
-	while(decreasingFlag && clients->items > 0) {
-		//Wait for requests
+	decreasingFlag = 0;
+	messageNum = 0;
+	do {
+		//Wait for requests of any kind
+		if( msgrcv(msgqui, msgbuf, REQUEST_SIZE, 0, 0) == -1) {
+			//if there was an error:
+			perror("msgrcv");
+			cleanup(3, available, clients, msgbuf, msgqid);
+			exit(1);
+		};
+		//display request
+		printf("Received following msg at queueID %u:", msgqid);
 		
 		//process requests
+		switch(msgbuf->mtype) {
+			case 1:
+				//client requesting resources
+				break;
+			case 2:
+				//client releasing resources
+				break;
+			case 3:
+				//client registering max resources
+				
+				break;
+			case 11:
+				//client releasing all resources
+				break;
+			default:
+				//bad or unprocessed type, so ignore it
+		}
 		
 		//Display status
 		
 		//Send reply
-	}
+	} while(decreasingFlag && clients->items > 0);
 	
-	//Clean up
-	free(available);
-	free(clients->clientInfo);
-	
+	cleanup(-1, available, clients, msgbuf, msgqid);
 	return 0;
 }
 
@@ -90,7 +135,10 @@ void add_client(sorted_array_t * clients, client_info_t* newClient) {
 	if(clients->items > clients->size) {
 		if(clients->size == 0) clients->size = 4;
 		else				  clients->size *= 2;
+		
 		clients->clientInfo = realloc(clients->clientInfo, clients->size * sizeof(client_info_t));
+		if(clients->clientInfo == NULL)
+			perror("realloc clients->clientInfo");
 	}
 	// shift through array until position or end is found
 	for(i = clients->items; i!=0 && clients->clientInfo[i-1]->id < newClient->id; i--) {
@@ -145,4 +193,21 @@ void remove_client(sorted_array_t * clients, int id) {
 
 int compare_client_ids(const void* id, const void* pelem) {
 	return *(int *)id - ((client_info_t *)pelem)->id;
+}
+
+void cleanup(int step, unsigned int * available, sorted_array_t clients, msgbuf_t * msgbuf,  int msgqid) {
+	switch(step) {
+		case -1:
+			//all
+		case 3:
+			if(msgctl(msgqid, IPC_RMID, NULL) == -1)
+				perror("msgctl");
+		case 2:
+			free(msgbuf);
+		case 1:
+			free(clients.clientInfo);
+		case 0:
+			free(available);
+		default:
+	}
 }
