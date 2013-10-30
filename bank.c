@@ -18,7 +18,7 @@ void init_resources(unsigned int * numTypes, unsigned int ** available) {
 	*available = (unsigned int *) malloc(sizeof(unsigned int) * (*numTypes));
 	
 	if(*available == NULL) {
-		printf("Error allocating available resource vector of size %d.", *numTypes);
+		fprintf(stderr, "Error allocating available resource vector of size %d.\n", *numTypes);
 		fclose(file);
 		exit(1);
 	}
@@ -26,6 +26,7 @@ void init_resources(unsigned int * numTypes, unsigned int ** available) {
 	for(i = 0; i < *numTypes; i++) {
 		fscanf(file, "%u", *available + i);
 	}
-	
 	fclose(file);
+	
+	printf("Number of resource types = %d\n", *numTypes);
 }
