@@ -73,6 +73,10 @@ int main(int argc, char *argv[]){
 		msgbuf->request.serialNum = msgbuf->request.serialNum += 1;
 		memcpy( msgbuf->resourceVector, claim, sizeof(unsigned int) * numTypes);
 		
+		//display sent message
+		printf("Sent message to queueID %u:\n", bankqid);
+		display_msg(msgbuf, numTypes);
+		
 		//send intial request
 		if (msgsnd(bankqid, msgbuf, REQUEST_SIZE) == -1){
 			printf("Error sending message");
@@ -84,6 +88,11 @@ int main(int argc, char *argv[]){
 			cleanUp(0, msgbuf, respbuf);
 			exit(1);
 		}
+		
+		//display received message
+		printf("Received message at queueID %u:\n", msgqid);
+		display_msg(msgbuf, numTypes);
+		
 		for(i = 0; i < numTypes; i++){
 			if(claim[i] > 0)
 				claim[i] = claim[i] - 1;
@@ -101,6 +110,10 @@ int main(int argc, char *argv[]){
 	
 		//step3
 		do{
+			//display sent message
+			printf("Sent message to queueID %u:\n", bankqid);
+			display_msg(msgbuf, numTypes);
+		
 			if (msgsnd(bankqid, msgbuf, REQUEST_SIZE) == -1){
 				printf("Error sending message");
 				cleanUp(0, msgbuf, respbuf);
@@ -111,6 +124,11 @@ int main(int argc, char *argv[]){
 				cleanUp(0, msgbuf, respbuf);
 				exit(1);
 			}
+			
+			//display received message
+			printf("Received message at queueID %u:\n", msgqid);
+			display_msg(msgbuf, numTypes);
+			
 			switch(respbuf.mtype){
 				case 4:
 					//request granted
