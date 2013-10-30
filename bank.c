@@ -32,15 +32,14 @@ void init_resources(unsigned int * numTypes, unsigned int ** available) {
 }
 
 
-void display_msg(msgbuf_t * msgbuf, int msgqid, unsigned int numTypes) {
+void display_msg(msgbuf_t * msgbuf, unsigned int numTypes) {
 	int i;
-	
-	printf("Received the folowing msg at queueID %u\nFrom queueID %u\n",
-		msgqid, msgbuf->request.retAddr);
 	
 	printf("\tClient id: %d\n", msgbuf->request.sender);
 	
-	printf("\tserial number: %u\n",msgbuf->request.serialNum);
+	printf("\tSerial number: %u\n",msgbuf->request.serialNum);
+	
+	printf("\tReturn address: queueID %u\n", msgbuf->request.retAddr)
 	
 	printf("\tMessage type: %d-", msgbuf->mtype);
 	switch(msgbuf->mtype) {
