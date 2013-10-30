@@ -14,6 +14,7 @@
 void randomInit(unsigned int request[]);
 void randomRelease(unsigned int request[]);
 void wait();
+void cleanUp();
 
 //globals
 unsigned int * allocated;
@@ -42,21 +43,24 @@ int main(int argc, char *argv[]){
 	randomInit(&claim, &allocated, numTypes);
    
     
-	request = (msgbuf_t *) malloc(sizeof(msgbuf_t) + sizeof(int) * (numTypes - 1));
+	request = (msgbuf_t *) malloc(MSGBUF_SIZE);
     
 	if(request == NULL) {
 		printf("Error allocating message buffer of size %d.", numTypes);
+		cleanUp(0, msgbuf, respbuf);
 		exit(1);
     	}
     
 	key = ftok("initial.data" , id);
     
-    if((bankqid = msgget(key, 0644)) == -1) {
+	if((bankqid = msgget(key, 0644)) == -1) {
 		perror("msgget");
+		cleanUp(0, msgbuf, respbuf);
 		exit(1);
   	}
 	if(myqid = msgget(key,0644| IPC_CREAT | IPC_EXCL) == -1){
 		printf("Cannot create an exclusive message queue exiting"):
+		cleanUp(0, msgbuf, respbuf);
 		exit(1);
 	}
     
@@ -72,10 +76,12 @@ int main(int argc, char *argv[]){
 		//send intial request
 		if (msgsnd(bankqid, msgbuf, REQUEST_SIZE) == -1){
 			printf("Error sending message");
+			cleanUp(1, msgbuf, respbuf);
 			exit(1);
 		}
-		if (msgrc(myqid, respbuf, NOTE_SIZE, 0, 0) == -1){
+		if (msgrc(myqid, respbuf, REQUEST_SIZE, 0, 0) == -1){
 			printf("Error recieving message");
+			cleanUp(1, msgbuf, respbuf);
 			exit(1);
 		}
 		for(i = 0; i < numTypes; i++){
@@ -87,9 +93,22 @@ int main(int argc, char *argv[]){
     
 	for(j = 0; j < MAX_ITERATIONS; j++){
 		//step1 make a randomized resource request
+		msgbuf->request.serialNum = msgbuf->request.serialNum += 1;
 		randomInit(msgbuf->request.resourceVector);
+		if (msgsnd(bankqid, msgbuf, REQUEST_SIZE) == -1){
+			printf("Error sending message");
+			exit(1);
+		}
+		if (msgrc(myqid, respbuf, REQUEST_SIZE, 0, 0) == -1){
+			printf("Error recieving message");
+			exit(1);
+		}
 	
 		//step2 wait for a response from the banker of a matching serial number
+		if(msgrcv(msgqid, note, NOTE_SIZE(max_string_length), 0, 0) == -1) {
+			perror("msgrcv");
+			exit(1);
+		}
 	
 		//step3
 		do{
@@ -167,5 +186,28 @@ void randomRelease(unsigned int request[]){
 void wait(){
 	unsigned int time = 1000 + 9000 * rand();
 	usleep(time);
+}
+
+void cleanUp(int case; int * msgBuf, int * rspBuf){
+	switch(case){
+		case 0:
+			free(msgbuf);
+			free(rspbufp);
+			msgctl(msgqid, IPC_RMID, NULL);	
+		case 1:
+			free(allocated);
+			free(claim);
+			break;
+		default:
+			//something went wrong clean everything just in case
+			free(allocated);
+			free(claim);
+			free(msgbuf);
+			free(rspbufp);
+			msgctl(msgqid, IPC_RMID, NULL);	
+			break;
+				
+	}
+	
 }
 
