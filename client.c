@@ -47,7 +47,7 @@ int main(int argc, char *argv[]){
     
 	if(request == NULL) {
 		printf("Error allocating message buffer of size %d.", numTypes);
-		cleanUp(0, msgbuf, respbuf);
+		cleanUp(1, msgbuf, respbuf);
 		exit(1);
     	}
     
@@ -55,12 +55,12 @@ int main(int argc, char *argv[]){
     
 	if((bankqid = msgget(key, 0644)) == -1) {
 		perror("msgget");
-		cleanUp(0, msgbuf, respbuf);
+		cleanUp(1, msgbuf, respbuf);
 		exit(1);
   	}
 	if(myqid = msgget(key,0644| IPC_CREAT | IPC_EXCL) == -1){
 		printf("Cannot create an exclusive message queue exiting"):
-		cleanUp(0, msgbuf, respbuf);
+		cleanUp(1, msgbuf, respbuf);
 		exit(1);
 	}
     
@@ -76,44 +76,42 @@ int main(int argc, char *argv[]){
 		//send intial request
 		if (msgsnd(bankqid, msgbuf, REQUEST_SIZE) == -1){
 			printf("Error sending message");
-			cleanUp(1, msgbuf, respbuf);
+			cleanUp(0, msgbuf, respbuf);
 			exit(1);
 		}
 		if (msgrc(myqid, respbuf, REQUEST_SIZE, 0, 0) == -1){
 			printf("Error recieving message");
-			cleanUp(1, msgbuf, respbuf);
+			cleanUp(0, msgbuf, respbuf);
 			exit(1);
 		}
 		for(i = 0; i < numTypes; i++){
 			if(claim[i] > 0)
 				claim[i] = claim[i] - 1;
 		}
-	}while(respbuf.mtype == 10);
+	}while(respbuf.mtype == 10 && msgbuf->request.serialNum <= MAX_ITERATIONS );
 	
     
-	for(j = 0; j < MAX_ITERATIONS; j++){
+	for(j = 0; j <= MAX_ITERATIONS; j++){
 		//step1 make a randomized resource request
 		msgbuf->request.serialNum = msgbuf->request.serialNum += 1;
 		randomInit(msgbuf->request.resourceVector);
-		if (msgsnd(bankqid, msgbuf, REQUEST_SIZE) == -1){
-			printf("Error sending message");
-			exit(1);
-		}
-		if (msgrc(myqid, respbuf, REQUEST_SIZE, 0, 0) == -1){
-			printf("Error recieving message");
-			exit(1);
-		}
+		
 	
 		//step2 wait for a response from the banker of a matching serial number
-		if(msgrcv(msgqid, note, NOTE_SIZE(max_string_length), 0, 0) == -1) {
-			perror("msgrcv");
-			exit(1);
-		}
 	
 		//step3
 		do{
-			//send request
-			switch(/*purpose code */){
+			if (msgsnd(bankqid, msgbuf, REQUEST_SIZE) == -1){
+				printf("Error sending message");
+				cleanUp(0, msgbuf, respbuf);
+				exit(1);
+			}
+			if (msgrc(myqid, respbuf, REQUEST_SIZE, 0, 0) == -1){
+				printf("Error recieving message");
+				cleanUp(0, msgbuf, respbuf);
+				exit(1);
+			}
+			switch(respbuf.mtype){
 				case 4:
 					//request granted
 					attempts = MAX_ATTEMPTS;
@@ -121,7 +119,7 @@ int main(int argc, char *argv[]){
 				case 6:
 					// request denied exceeds max claims
 					for(i = 0; i < numTypes; i++){
-						msgbuf->request.data[i] = msgbuf->request.data[i] - 1;
+						msgbuf->request.resourceVector[i] = msgbuf->request.resourceVector[i] - 1;
 					}
 					attempts++;
 					break;
@@ -140,6 +138,9 @@ int main(int argc, char *argv[]){
 	
 		if(attempts < MAX_ATTEMPTS){
 			//step 4
+			for(i = 0; i < numTypes; i++){
+				allocated[i] = allocated[i] + msgbuf->request.resourceVector[i];
+			}
 			wait();
 			//step 5
 			randomRelease(/* put the stuff here */);
