@@ -28,6 +28,7 @@ int main(int argc, char *argv[]){
 	msgbuf_t * respbuf;
 	int myqid;
 	int bankqid;
+	unsigned int serial = 0;
 	
 	key_t key;
 	//manage message info
@@ -66,11 +67,12 @@ int main(int argc, char *argv[]){
     
 	msgbuf.mtype = 1;
 	msgbuf->request.sender = id;
-	msgbuf->request.serialNum = 1;
+	msgbuf->request.serialNum = serial;
 	msgbuf->request.retAddr = myqid;
 	do{
 		//setup message
-		msgbuf->request.serialNum = msgbuf->request.serialNum += 1;
+		serial++;
+		msgbuf->request.serialNum = msgbuf->request.serialNum = serial;
 		memcpy( msgbuf->resourceVector, claim, sizeof(unsigned int) * numTypes);
 		
 		//display sent message
@@ -102,13 +104,10 @@ int main(int argc, char *argv[]){
     
 	for(j = 0; j <= MAX_ITERATIONS; j++){
 		//step1 make a randomized resource request
-		msgbuf->request.serialNum = msgbuf->request.serialNum += 1;
+		serial++;
+		msgbuf->request.serialNum = msgbuf->request.serialNum = serial;
 		randomInit(msgbuf->request.resourceVector);
-		
 	
-		//step2 wait for a response from the banker of a matching serial number
-	
-		//step3
 		do{
 			//display sent message
 			printf("Sent message to queueID %u:\n", bankqid);
@@ -123,6 +122,11 @@ int main(int argc, char *argv[]){
 				printf("Error recieving message");
 				cleanUp(0, msgbuf, respbuf);
 				exit(1);
+			}
+			
+			if(respbuf->request.inReply != serial){
+				printf("Banker error their banker serial# %d client serial# \n", respbuf->request.inReply, serial);
+				cleanUp(0, msgbuf, respbuf);
 			}
 			
 			//display received message
@@ -149,6 +153,7 @@ int main(int argc, char *argv[]){
 					break;
 				default:
 					//invalid purpose code
+					attempts++;
 					break;
 			}
 		}while(attempts < MAX_ATTEMPTS);
