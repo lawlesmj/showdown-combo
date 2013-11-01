@@ -21,7 +21,7 @@ typedef struct {
   struct {
     unsigned int sender; //defined by the person who instantiates the client
     unsigned int serialNum; //message number
-    unsigned int 
+    unsigned int inReply; // bankers serial #
     int retAddr; // return address for the reply
     //butts?
     int resourceVector[1];
