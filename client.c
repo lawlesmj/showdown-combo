@@ -193,6 +193,9 @@ int main(int argc, char *argv[]){
 			if( respbuf.mtype == 8){
 				//print some stuff
 				//alter allocated vector accordingly
+				for(i = 0; i < numTypes; i++){
+					allocated[i] = allocated[i] - msgbuf->request.resourceVector[i];	
+				}
 			}
 			else{
 				//print some stuff
