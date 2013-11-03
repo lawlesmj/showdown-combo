@@ -108,9 +108,8 @@ int main(int argc, char *argv[]){
 		randomInit(msgbuf->request.resourceVector);
 	
 		do{
-			//display sent message
-			printf("Sent message to queueID %u:\n", bankqid);
-			display_msg(msgbuf, numTypes);
+			
+			
 			serial++;
 			msgbuf->request.serialNum = msgbuf->request.serialNum = serial;
 		
@@ -119,6 +118,11 @@ int main(int argc, char *argv[]){
 				cleanUp(0, msgbuf, respbuf);
 				exit(1);
 			}
+			
+			//display sent message
+			printf("Sent message to queueID %u:\n", bankqid);
+			display_msg(msgbuf, numTypes);
+			
 			if (msgrc(myqid, respbuf, REQUEST_SIZE, 0, 0) == -1){
 				printf("Error recieving message");
 				cleanUp(0, msgbuf, respbuf);
@@ -191,14 +195,15 @@ int main(int argc, char *argv[]){
 			//step 7 
 		
 			if( respbuf.mtype == 8){
-				//print some stuff
+				
 				//alter allocated vector accordingly
 				for(i = 0; i < numTypes; i++){
 					allocated[i] = allocated[i] - msgbuf->request.resourceVector[i];	
 				}
+				display_msg(msgbuf, numTypes);
 			}
 			else{
-				//print some stuff
+				display_msg(msgbuf, numTypes);
 				//do not alter allocated vector
 			}
 		
