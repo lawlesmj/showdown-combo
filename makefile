@@ -9,4 +9,4 @@ client: bank.o client.c
 	$(CC) client.c -o client
 
 bank.o: bank.c bank.h
-	$(CC) bank.c - c
+	$(CC) bank.c -c
