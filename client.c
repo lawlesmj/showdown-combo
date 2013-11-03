@@ -66,7 +66,7 @@ int main(int argc, char *argv[]){
 	}
     
 	serial = id * 1000;
-	msgbuf.mtype = 1;
+	msgbuf.mtype = 3;
 	msgbuf->request.sender = id;
 	msgbuf->request.serialNum = serial;
 	msgbuf->request.retAddr = myqid;
@@ -105,7 +105,7 @@ int main(int argc, char *argv[]){
     
 	for(j = 0; j <= MAX_ITERATIONS; j++){
 		//step1 make a randomized resource request
-		
+		msgbuf.mtype = 1;
 		randomInit(msgbuf->request.resourceVector);
 	
 		do{
@@ -173,6 +173,7 @@ int main(int argc, char *argv[]){
 			}
 			wait();
 			//step 5
+			msgbuf.mtype = 2;
 			randomRelease(msgbuf->request.resourceVector);
 			serial++;
 			msgbuf->request.serialNum = msgbuf->request.serialNum = serial;
@@ -218,6 +219,16 @@ int main(int argc, char *argv[]){
 		//happens at the end of the loop
 		attempts = 0;
 	}
+	
+	//release all
+	msgbuf.mtype = 11;
+	if (msgsnd(bankqid, msgbuf, REQUEST_SIZE) == -1){
+		printf("Error sending message");
+		cleanUp(0, msgbuf, respbuf);
+		exit(1);
+	}
+	
+	exit(0);
     
 }
 
