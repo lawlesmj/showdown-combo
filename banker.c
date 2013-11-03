@@ -44,6 +44,8 @@ void remove_client(sorted_array_t *, int id);
 
 void cleanup(int step, unsigned int * available, maxAvailable,
 	sorted_array_t clients, msgbuf_t * msgbuf,  int msgqid);
+	
+int bankers_algorithm(sorted_array_t clients, unsigned int available[]);
 
 
 int main() {
@@ -366,4 +368,8 @@ void cleanup(int step, unsigned int * available, unsigned int * maxAvailable,
 			free(available);
 		default:
 	}
+}
+
+int bankers_algorithm(sorted_array_t clients, unsigned int available[]) {
+	return 1;
 }
