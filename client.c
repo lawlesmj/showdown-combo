@@ -9,7 +9,7 @@
 
 #include <unistd.h> //lets us use u sleep
 
-#include "banker.h"
+#include "bank.h"
 
 void randomInit(unsigned int request[]);
 void randomRelease(unsigned int request[]);
