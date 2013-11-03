@@ -23,7 +23,6 @@ typedef struct {
     unsigned int serialNum; //message number
     unsigned int inReply; // bankers serial #
     int retAddr; // return address for the reply
-    //butts?
     int resourceVector[1];
   } request;
 } msgbuf_t;
