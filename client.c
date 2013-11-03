@@ -28,11 +28,11 @@ int main(int argc, char *argv[]){
 	msgbuf_t * respbuf;
 	int myqid;
 	int bankqid;
-	unsigned int serial = 0;
+	unsigned int serial;
 	
 	key_t key;
 	//manage message info
-	int id;
+	int id = atoi(argv[0]);
 	
 	//manage loops
 	unsigned int i,j;
@@ -65,6 +65,7 @@ int main(int argc, char *argv[]){
 		exit(1);
 	}
     
+	serial = id * 1000;
 	msgbuf.mtype = 1;
 	msgbuf->request.sender = id;
 	msgbuf->request.serialNum = serial;
@@ -129,8 +130,8 @@ int main(int argc, char *argv[]){
 				exit(1);
 			}
 			
-			if(respbuf->request.inReply != serial){
-				printf("Banker error their banker serial# %d client serial# \n", respbuf->request.inReply, serial);
+			if(respbuf->request.serialNum != serial){
+				printf("Banker error their banker serial# %d client serial# \n", respbuf->request.serialNum, serial);
 				cleanUp(0, msgbuf, respbuf);
 				exit(1);
 			}
@@ -261,4 +262,5 @@ void cleanUp(int case; int * msgBuf, int * rspBuf){
 	}
 	
 }
+
 
