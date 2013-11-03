@@ -20,7 +20,7 @@
 #include <sys/types.h>
 #include <sys/msg.h>
 
-#include "banker.h"
+#include "bank.h"
 
 typedef struct {
 	int id;
