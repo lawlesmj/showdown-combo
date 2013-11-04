@@ -370,6 +370,30 @@ void cleanup(int step, unsigned int * available, unsigned int * maxAvailable,
 	}
 }
 
-int bankers_algorithm(sorted_array_t clients, unsigned int available[]) {
-	return 1;
+bool bankersAlgorithm(sorted_array_t clients, unsigned int available[]){
+int i = 0;	
+int j;
+	while(i < clients.items){
+		lessThanWork = true;
+		for(j = 0; j < numTypes; j++){
+			if(clients.clientInfo[i].needs[j] > avail[j])
+				lessThanWork = false;
+		}
+		if(clients[i][4] == false && lessThanWork){
+			for(j = 0; j < numTypes; j++){
+				avail[j] += clients.clientInfo[i].allocated[j];
+			}
+			clients.clientInfo[i].done = true;
+			i = 0;
+		}
+		else
+			i++;
+	}
+	
+	for(i = 0; i < clients.items; i++){
+		if(clients.clientInfo[i].done != true)
+			return false;
+	}
+
+	return true;
 }
