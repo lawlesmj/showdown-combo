@@ -38,14 +38,14 @@ typedef struct {
 
 int compare_client_ids(const void* id, const void* pelem);
 
-void add_client(sorted_array_t *, client_info_t);
+void add_client(sorted_array_t *, client_info_t *);
 client_info_t* get_client(sorted_array_t *, int id);
 void remove_client(sorted_array_t *, int id);
 
-void cleanup(int step, unsigned int * available, maxAvailable,
+void cleanup(int step, unsigned int * available, unsigned int * maxAvailable,
 	sorted_array_t clients, msgbuf_t * msgbuf,  int msgqid);
 	
-int bankers_algorithm(sorted_array_t clients, unsigned int available[]);
+int bankers_algorithm(sorted_array_t clients, unsigned int available[], unsigned int numTypes);
 
 
 int main() {
@@ -75,11 +75,11 @@ int main() {
 		cleanup(0, available, maxAvailable, clients, msgbuf, msgqid);
 		exit(1);
 	}
-	memcpy(maxAvailable, available, numtypes * sizeof(unsigned int));
+	memcpy(maxAvailable, available, numTypes * sizeof(unsigned int));
 	
 	clients.size = 4;
 	clients.items = 0;
-	clients.clientInfo = (clients_info_t *) malloc(clients.size * sizeof(client_info_t))
+	clients.clientInfo = (client_info_t *) malloc(clients.size * sizeof(client_info_t));
 	if(clients.clientInfo == NULL) {
 		perror("malloc clients.clientInfo");
 		cleanup(1, available, maxAvailable, clients, msgbuf, msgqid);
@@ -96,7 +96,7 @@ int main() {
 	//Make exclusive mailbox
 	key = BANK_MSGQUE_KEY;
 	msgqid = msgget(key, 0420 | IPC_EXCL | IPC_CREAT);
-	if(msgqui == NULL) {
+	if(msgqid == NULL) {
 		// Failed to create queue
 		perror("msgget");
 		cleanup(3, available, maxAvailable, clients, msgbuf, msgqid);
@@ -107,7 +107,7 @@ int main() {
 	messageNum = 1;
 	do {
 		//Wait for requests of any kind
-		if( msgrcv(msgqui, msgbuf, REQUEST_SIZE, 0, 0) == -1) {
+		if( msgrcv(msgqid, msgbuf, REQUEST_SIZE, 0, 0) == -1) {
 			//if there was an error:
 			perror("msgrcv");
 			cleanup(4, available, maxAvailable, clients, msgbuf, msgqid);
@@ -123,7 +123,7 @@ int main() {
 		switch(msgbuf->mtype) {
 			case 1:
 				//client requesting resources
-				client = get_client(clients, msgbuf->request.sender);
+				client = get_client(&clients, msgbuf->request.sender);
 				for(i=0, flag=0; i<numTypes || flag; i++) {
 					//calculate client needs
 					client->needs[i] = client->claims[i] - client->allocated[i];
@@ -144,18 +144,18 @@ int main() {
 					}
 					//No
 					if(flag) {
-						msbuf->mtype = 12;
+						msgbuf->mtype = 12;
 						printf("\tFAILED REQUEST\n");
 					}
 					else {
 						//Yes
-						client = get_client(clients, msgbuf->request.sender);
+						client = get_client(&clients, msgbuf->request.sender);
 						for(i=0; i<numTypes; i++) {
 							client->allocated[i] += msgbuf->request.resourceVector[i];
 							client->needs[i] -= msgbuf->request.resourceVector[i];
 							available -= msgbuf->request.resourceVector[i];
 						}
-						if(bankers_algorithm(clients, available)) {
+						if(bankers_algorithm(clients, available, numTypes)) {
 							//success
 							msgbuf->mtype = 4;
 							printf("\tGRANTED REQUEST\n");
@@ -174,7 +174,7 @@ int main() {
 				break;
 			case 2:
 				//client releasing resources
-				client = get_client(clients, msgbuf->request.sender);
+				client = get_client(&clients, msgbuf->request.sender);
 				for(i=0, flag=0; i<numTypes || flag; i++) {
 					//are they releasing resources that they actually have?
 					flag = msgbuf->request.resourceVector[i] > client->allocated[i];
@@ -201,7 +201,7 @@ int main() {
 				//client registering max resources
 				for(i=0, flag=0; i<numTypes || flag; i++) {
 					//does the claim fit my max resources?
-					flag = msgbuf->request.resourceVector[i] > maxAvailable[i]);
+					flag = msgbuf->request.resourceVector[i] > maxAvailable[i];
 				}
 				if(!flag) {
 					//this claim will fit my max resources
@@ -213,7 +213,7 @@ int main() {
 					}
 					else {
 						client->claims = (unsigned int *) malloc(sizeof(unsigned int) * numTypes);
-						client->allocated = (unsigned int *) calloc(numtypes, sizeof(unsigned int));
+						client->allocated = (unsigned int *) calloc(numTypes, sizeof(unsigned int));
 						client->needs = (unsigned int *) malloc(sizeof(unsigned int) * numTypes);
 						
 						if(client->claims == NULL 
@@ -245,14 +245,16 @@ int main() {
 				break;
 			case 11:
 				//client releasing all resources
-				client = get_client(clients, msgbuf->request.sender);
+				client = get_client(&clients, msgbuf->request.sender);
 				for(i=0; i<numTypes; i++) {
 					available[i] += client->allocated[i];
 				}
-				remove_client(clients, msgbuf->request.sender);
+				remove_client(&clients, msgbuf->request.sender);
+				decreasingFlag = 1;
 				break;
 			default:
 				//bad or unprocessed type, so ignore it
+				break;
 		}
 		
 		msgbuf->request.sender = 0;
@@ -268,7 +270,7 @@ int main() {
 		
 		//Display status
 		
-	} while(decreasingFlag && clients->items > 0);
+	} while(decreasingFlag && clients.items > 0);
 	
 	cleanup(-1, available, maxAvailable, clients, msgbuf, msgqid);
 	return 0;
@@ -299,7 +301,7 @@ void add_client(sorted_array_t * clients, client_info_t* newClient) {
 		clients->clientInfo[i] = newClient;
 	}
 	else
-		client->items--;
+		clients->items--;
 	
 }
 
@@ -321,9 +323,9 @@ void remove_client(sorted_array_t * clients, int id) {
 	removedClient = NULL;
 	while(low <= high) {
 		mid = low + (high-low)/2;
-		if(id < clients->clientInfo[mid]->id)
+		if(id < clients->clientInfo[mid].id)
 			high = mid - 1;
-		else if(id > clients->clientInfo[mid]->id)
+		else if(id > clients->clientInfo[mid].id)
 			low = mid + 1;
 		else
 			removedClient = clients->clientInfo[mid];
@@ -367,33 +369,44 @@ void cleanup(int step, unsigned int * available, unsigned int * maxAvailable,
 		case 0:
 			free(available);
 		default:
+			break;
 	}
 }
 
-bool bankersAlgorithm(sorted_array_t clients, unsigned int available[]){
-int i = 0;	
-int j;
+int bankersAlgorithm(sorted_array_t clients, unsigned int available[], unsigned int numTypes) {
+	int i, j, lessThanWork;
+	unsigned int * work;
+	
+	work = (unsigned int *) malloc(numTypes * sizeof(unsigned int));
+	if(work == NULL) {
+		perror("malloc work");
+		return 0;
+	}
+	memcpy(work, available, numTypes * sizeof(unsigned int));
+	
+	i=0;
 	while(i < clients.items){
-		lessThanWork = true;
-		for(j = 0; j < numTypes; j++){
-			if(clients.clientInfo[i].needs[j] > avail[j])
-				lessThanWork = false;
-		}
-		if(clients[i][4] == false && lessThanWork){
-			for(j = 0; j < numTypes; j++){
-				avail[j] += clients.clientInfo[i].allocated[j];
+		if(!clients.clientInfo[i]->done) {
+			lessThanWork = 1;
+			for(j = 0; j < numTypes && lessThanWork; j++){
+				lessThanWork &= clients.clientInfo[i]->needs[j] <= work[j];
 			}
-			clients.clientInfo[i].done = true;
-			i = 0;
+			
+			if(lessThanWork) {
+				for(j = 0; j < numTypes; j++){
+					work[j] += clients.clientInfo[i]->allocated[j];
+				}
+				clients.clientInfo[i]->done = 1;
+				i = 0;
+			}
 		}
 		else
 			i++;
 	}
 	
-	for(i = 0; i < clients.items; i++){
-		if(clients.clientInfo[i].done != true)
-			return false;
+	for(i = 0, lessThanWork = 1; lessThanWork && i < clients.items; i++){
+		lessThanWork &= clients.clientInfo[i]->done;
 	}
 
-	return true;
+	return lessThanWork;
 }
