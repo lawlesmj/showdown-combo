@@ -17,8 +17,8 @@ void wait();
 void cleanUp(int instance, msgbuf_t * msgBuf, msgbuf_t * rspBuf);
 
 //globals
-unsigned int * allocated;
-unsigned int * claim;
+unsigned int * allocated = NULL;
+unsigned int * claim = NULL;
 unsigned int numTypes;
 const int MAX_ATTEMPTS = 10;
 const int MAX_ITERATIONS = 10;
@@ -26,13 +26,13 @@ int myqid;
 int bankqid;
 
 int main(int argc, char *argv[]){
-        msgbuf_t * msgbuf;
-        msgbuf_t * respbuf;
+        msgbuf_t * msgbuf = NULL;
+        msgbuf_t * respbuf = NULL;
         unsigned int serial;
         
         key_t key;
         //manage message info
-        int id = atoi(argv[0]);
+        int id = atoi(argv[1]);
         
         //manage loops
         unsigned int i,j;
@@ -41,27 +41,42 @@ int main(int argc, char *argv[]){
     
         init_resources(&numTypes, &claim);
         allocated = (unsigned int *) calloc(numTypes,sizeof(unsigned int));
+        if(allocated == NULL) {
+        	perror("calloc allocated");
+		cleanUp(0, msgbuf, respbuf);
+        	exit(1);
+        }
+        srand(id);
         randomInit(claim);
    
     
-        msgbuf = (msgbuf_t *) malloc(MSGBUF_SIZE);
-    
+        msgbuf = (msgbuf_t *) malloc(MSGBUF_SIZE);    
         if(msgbuf == NULL) {
                 printf("Error allocating message buffer of size %d.", numTypes);
                 cleanUp(1, msgbuf, respbuf);
                 exit(1);
-            }
-    
-        key = ftok("initial.data" , id);
-    
+        }
+        
+        respbuf = (msgbuf_t *) malloc(MSGBUF_SIZE);    
+        if(respbuf == NULL) {
+                printf("Error allocating message buffer of size %d.", numTypes);
+                cleanUp(2, msgbuf, respbuf);
+                exit(1);
+        }
+    	
+    	key = BANK_MSGQUE_KEY;
+    	
         if((bankqid = msgget(key, 0644)) == -1) {
                 printf("Cannot get the banker's address");
-                cleanUp(1, msgbuf, respbuf);
+                cleanUp(3, msgbuf, respbuf);
                 exit(1);
           }
+         
+        key = ftok("initial.data" , id);
+        
         if(myqid = msgget(key,0644| IPC_CREAT | IPC_EXCL) == -1){
-                printf("Cannot create an exclusive message queue exiting");
-                cleanUp(1, msgbuf, respbuf);
+                perror("Cannot create an exclusive message queue exiting");
+                cleanUp(3, msgbuf, respbuf);
                 exit(1);
         }
     
@@ -83,12 +98,12 @@ int main(int argc, char *argv[]){
                 //send intial request
                 if (msgsnd(bankqid, msgbuf, REQUEST_SIZE, 0) == -1){
                         printf("Error sending message");
-                        cleanUp(0, msgbuf, respbuf);
+                        cleanUp(4, msgbuf, respbuf);
                         exit(1);
                 }
                 if (msgrcv(myqid, respbuf, REQUEST_SIZE, 0, 0) == -1){
-                        printf("Error recieving message");
-                        cleanUp(0, msgbuf, respbuf);
+                        perror("Error recieving message");
+                        cleanUp(4, msgbuf, respbuf);
                         exit(1);
                 }
                 
@@ -116,7 +131,7 @@ int main(int argc, char *argv[]){
                 
                         if (msgsnd(bankqid, msgbuf, REQUEST_SIZE, 0) == -1){
                                 printf("Error sending message");
-                                cleanUp(0, msgbuf, respbuf);
+                                cleanUp(4, msgbuf, respbuf);
                                 exit(1);
                         }
                         
@@ -126,13 +141,13 @@ int main(int argc, char *argv[]){
                         
                         if (msgrcv(myqid, respbuf, REQUEST_SIZE, 0, 0) == -1){
                                 printf("Error recieving message");
-                                cleanUp(0, msgbuf, respbuf);
+                                cleanUp(4, msgbuf, respbuf);
                                 exit(1);
                         }
                         
                         if(respbuf->request.serialNum != serial){
                                 printf("Banker error their banker serial# %d client serial# \n", respbuf->request.serialNum, serial);
-                                cleanUp(0, msgbuf, respbuf);
+                                cleanUp(4, msgbuf, respbuf);
                                 exit(1);
                         }
                         
@@ -180,18 +195,18 @@ int main(int argc, char *argv[]){
                         //step 6
                         if (msgsnd(bankqid, msgbuf, REQUEST_SIZE, 0) == -1){
                                 printf("Error sending message");
-                                cleanUp(0, msgbuf, respbuf);
+                                cleanUp(4, msgbuf, respbuf);
                                 exit(1);
                         }
                         if (msgrcv(myqid, respbuf, REQUEST_SIZE, 0, 0) == -1){
                                 printf("Error recieving message");
-                                cleanUp(0, msgbuf, respbuf);
+                                cleanUp(4, msgbuf, respbuf);
                                 exit(1);
                         }
                         
                         if(respbuf->request.inReply != serial){
                                 printf("Banker error their banker serial# %d client serial# \n", respbuf->request.inReply, serial);
-                                cleanUp(0, msgbuf, respbuf);
+                                cleanUp(4, msgbuf, respbuf);
                                 exit(1);
                         }
                         //step 7
@@ -224,10 +239,11 @@ int main(int argc, char *argv[]){
         msgbuf->mtype = 11;
         if (msgsnd(bankqid, msgbuf, REQUEST_SIZE, 0) == -1){
                 printf("Error sending message");
-                cleanUp(0, msgbuf, respbuf);
+                cleanUp(4, msgbuf, respbuf);
                 exit(1);
         }
-        
+
+        cleanUp(-1, msgbuf, respbuf);
         exit(0);
     
 }
@@ -235,43 +251,42 @@ int main(int argc, char *argv[]){
 void randomInit(unsigned int request[]){
         int i;
         for(i = 0; i < numTypes; i++){
-                request[i] = (unsigned int) (claim[i] - allocated[i] )* rand();
+                request[i] =  (claim[i] - allocated[i] ) % ((unsigned int)rand());
         }
 }
 
 void randomRelease(unsigned int request[]){
         int i;
         for(i = 0; i < numTypes; i++){
-                request[i] = (unsigned int) (allocated[i] )* rand();
+                request[i] = (allocated[i] ) % ((unsigned int)rand());
         }
 }
 
 void wait(){
-        unsigned int time = 1000 + 9000 * rand();
+        unsigned int time = 1000 + 9000 % ((unsigned int)rand());
         usleep(time);
 }
 
 void cleanUp(int instance, msgbuf_t * msgBuf, msgbuf_t * rspBuf){
         switch(instance){
-                case 0:
-                        free(msgBuf);
+        	case -1:
+        		//clean all
+                case 4:
+                        if(msgctl(myqid, IPC_RMID, NULL) == -1)
+                        	perror("msgctl");
+               	case 3:
                         free(rspBuf);
-                        msgctl(myqid, IPC_RMID, NULL);        
+		case 2:                       
+                        free(msgBuf);       
                 case 1:
                         free(allocated);
+                case 0:
                         free(claim);
-                        break;
                 default:
-                        //something went wrong clean everything just in case
-                        free(allocated);
-                        free(claim);
-                        free(msgBuf);
-                        free(rspBuf);
-                        msgctl(myqid, IPC_RMID, NULL);        
+                        //DO NOTHING     
                         break;
                                 
         }
         
 }
    
-
