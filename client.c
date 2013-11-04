@@ -55,7 +55,7 @@ int main(int argc, char *argv[]){
         key = ftok("initial.data" , id);
     
         if((bankqid = msgget(key, 0644)) == -1) {
-                perror("msgget");
+                printf("Cannot get the banker's address");
                 cleanUp(1, msgbuf, respbuf);
                 exit(1);
           }
